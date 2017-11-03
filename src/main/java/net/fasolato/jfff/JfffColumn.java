@@ -8,6 +8,8 @@ public class JfffColumn {
     private boolean pad;
     private boolean padLeft;
     private char padFiller;
+    private boolean trim;
+    private char trimFiller;
 
     public JfffColumn() {
         type = JfffTypes.string;
@@ -68,5 +70,21 @@ public class JfffColumn {
 
     public void setPadFiller(char padFiller) {
         this.padFiller = padFiller;
+    }
+
+    public boolean isTrim() {
+        return trim;
+    }
+
+    public void setTrim(boolean trim) {
+        this.trim = trim;
+    }
+
+    public char getTrimFiller() {
+        return trimFiller;
+    }
+
+    public void setTrimFiller(char trimFiller) {
+        this.trimFiller = trimFiller;
     }
 }
