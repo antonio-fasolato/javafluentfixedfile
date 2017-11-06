@@ -26,7 +26,7 @@ public class JfffColumn {
     public void validate() throws JfffException {
         List<String> errors = new LinkedList<String>();
 
-        if(name == null || name.trim().equalsIgnoreCase("")) {
+        if(StringUtils.isBlank(name)) {
             errors.add("Name is empty");
         }
         if(length <= 0) {
