@@ -1,9 +1,15 @@
 package net.fasolato.jfff;
 
+import org.apache.commons.beanutils.ConstructorUtils;
 import org.apache.commons.beanutils.PropertyUtils;
+import org.apache.commons.lang.ClassUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -229,20 +235,53 @@ public class JfffFile<T> {
      * Reads all the columns defined from the input and returns the POJO with all the values
      *
      * @param input The String to parse
+     * @param clazz The POJO class
      * @return A new POJO with its fields assigned with the columns read from the input
      */
-    public T parse(String input) {
-        throw new UnsupportedOperationException();
+    public T parse(String input, Class<T> clazz) throws JfffException {
+        try {
+            T obj = clazz.newInstance();
+
+            int i = 0;
+            for (JfffColumn c : columns) {
+                c.validate();
+                String s = StringUtils.substring(input, i, i += c.getLength());
+                Object v = c.parse(s);
+                PropertyUtils.setSimpleProperty(obj, c.getName(), v);
+            }
+
+            return obj;
+        } catch (Exception e) {
+            throw new JfffException(e);
+        }
     }
 
     /**
-     * Parses an entire file and returns a list of POJOs vith the file values
+     * Parses an entire string in input containig a series of rows.
      *
-     * @param f The file to read
+     * @param input The rows to parse
+     * @param separator The String used as row separator
+     * @param clazz The POJO class
      * @return A list of POJO containing all the values from the file
      */
-    public List<T> parseAll(File f) {
-        throw new UnsupportedOperationException();
+    public List<T> parseAll(String input, String separator, Class<T> clazz) throws JfffException {
+        String[] lines = StringUtils.split(input, separator);
+        List<T> toReturn = new ArrayList<T>();
+        for (String s : lines) {
+            toReturn.add(parse(s, clazz));
+        }
+        return toReturn;
+    }
+
+    /**
+     * Parses an entire string in input containig a series of rows. The OS line separator is used as row separator
+     *
+     * @param input The rows to parse
+     * @param clazz The POJO class
+     * @return A list of POJO containing all the values from the file
+     */
+    public List<T> parseAll(String input, Class<T> clazz) throws JfffException {
+        return parseAll(input, System.lineSeparator(), clazz);
     }
 
     /**
@@ -259,7 +298,7 @@ public class JfffFile<T> {
                 c.validate();
                 sb.append(c.toString(PropertyUtils.getSimpleProperty(values, c.getName())));
             }
-        } catch(Exception e) {
+        } catch (Exception e) {
             throw new JfffException(e);
         }
 

@@ -26,24 +26,46 @@ public class JfffColumn {
     public void validate() throws JfffException {
         List<String> errors = new LinkedList<String>();
 
-        if(StringUtils.isBlank(name)) {
+        if (StringUtils.isBlank(name)) {
             errors.add("Name is empty");
         }
-        if(length <= 0) {
+        if (length <= 0) {
             errors.add("Length is zero or less");
         }
 
-        if(!errors.isEmpty()) {
+        if (!errors.isEmpty()) {
             JfffException e = new JfffException("Validation error");
             e.setErrors(errors);
             throw e;
         }
     }
 
+    public Object parse(String s) throws JfffException {
+        try {
+            switch (type) {
+                case integer:
+                    if (StringUtils.isBlank(s)) {
+                        return 0;
+                    }
+                    return Integer.parseInt(s);
+                case string:
+                    if(trim) {
+                        return StringUtils.strip(s, "" + trimFiller);
+                    } else {
+                        return s;
+                    }
+                default:
+                    return null;
+            }
+        } catch (Exception e) {
+            throw new JfffException(e);
+        }
+    }
+
     public String toString(Object value) {
         String toReturn;
 
-        if(padLeft) {
+        if (padLeft) {
             toReturn = StringUtils.leftPad(value.toString(), length, padFiller);
         } else {
             toReturn = StringUtils.rightPad(value.toString(), length, padFiller);
