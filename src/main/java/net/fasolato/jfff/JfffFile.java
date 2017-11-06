@@ -245,9 +245,14 @@ public class JfffFile<T> {
             int i = 0;
             for (JfffColumn c : columns) {
                 c.validate();
-                String s = StringUtils.substring(input, i, i += c.getLength());
-                Object v = c.parse(s);
-                PropertyUtils.setSimpleProperty(obj, c.getName(), v);
+                if (c.isRequired() && input.length() < i + c.getLength()) {
+                    throw new JfffException(String.format("Input string too short. Cannot read column %s", c.getName()));
+                }
+                if(input.length() >= i + c.getLength()) {
+                    String s = StringUtils.substring(input, i, i += c.getLength());
+                    Object v = c.parse(s);
+                    PropertyUtils.setSimpleProperty(obj, c.getName(), v);
+                }
             }
 
             return obj;
@@ -259,9 +264,9 @@ public class JfffFile<T> {
     /**
      * Parses an entire string in input containig a series of rows.
      *
-     * @param input The rows to parse
+     * @param input     The rows to parse
      * @param separator The String used as row separator
-     * @param clazz The POJO class
+     * @param clazz     The POJO class
      * @return A list of POJO containing all the values from the file
      */
     public List<T> parseAll(String input, String separator, Class<T> clazz) throws JfffException {
@@ -296,7 +301,11 @@ public class JfffFile<T> {
         try {
             for (JfffColumn c : columns) {
                 c.validate();
-                sb.append(c.toString(PropertyUtils.getSimpleProperty(values, c.getName())));
+                Object val = PropertyUtils.getSimpleProperty(values, c.getName());
+                if (val == null && c.isRequired()) {
+                    throw new JfffException(String.format("Null value for field %s", c.getName()));
+                }
+                sb.append(val == null ? "" : c.toString(val));
             }
         } catch (Exception e) {
             throw new JfffException(e);
