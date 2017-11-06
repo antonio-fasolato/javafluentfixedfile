@@ -254,7 +254,7 @@ public class JfffFile<T> {
     public String createString(T values) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, JfffException {
         StringBuilder sb = new StringBuilder();
 
-        for(JfffColumn c : columns) {
+        for (JfffColumn c : columns) {
             c.validate();
             sb.append(c.toString(PropertyUtils.getSimpleProperty(values, c.getName())));
         }
@@ -270,8 +270,19 @@ public class JfffFile<T> {
      * @param separator The char to use as POJO separators once they are converted
      * @return The converted POJOs
      */
-    public String createString(List<T> values, String separator) {
-        throw new UnsupportedOperationException();
+    public String createString(List<T> values, String separator) throws InvocationTargetException, NoSuchMethodException, JfffException, IllegalAccessException {
+        StringBuilder sb = new StringBuilder("");
+
+        int i = 0;
+        for (T v : values) {
+            sb.append(createString(v));
+            if (i < values.size() - 1) {
+                sb.append(separator);
+            }
+            i++;
+        }
+
+        return sb.toString();
     }
 
     /**
@@ -281,7 +292,7 @@ public class JfffFile<T> {
      * @param values The list of POJOs to convert
      * @return The converted POJOs
      */
-    public String createString(List<T> values) {
+    public String createString(List<T> values) throws NoSuchMethodException, IllegalAccessException, JfffException, InvocationTargetException {
         return createString(values, System.lineSeparator());
     }
 }
