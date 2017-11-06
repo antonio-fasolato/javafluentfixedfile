@@ -1,6 +1,9 @@
 package net.fasolato.jfff;
 
+import org.apache.commons.beanutils.PropertyUtils;
+
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -18,6 +21,14 @@ public class JfffFile<T> {
      */
     public JfffFile() {
         columns = new LinkedList<JfffColumn>();
+    }
+
+    @Override
+    public String toString() {
+        return "{" +
+                "\"columns\":" + columns +
+                ", \"lastColumn\":" + lastColumn +
+                '}';
     }
 
     /**
@@ -60,6 +71,8 @@ public class JfffFile<T> {
         }
 
         lastColumn.setType(JfffTypes.integer);
+        lastColumn.setPadLeft(true);
+        lastColumn.setPadFiller('0');
         return this;
     }
     // = Columns type = end ===================================================================================
@@ -87,7 +100,7 @@ public class JfffFile<T> {
      * @return reference to this to permit fluent interface
      * @throws JfffException If no column is defined
      */
-    public JfffFile length(long length) throws JfffException {
+    public JfffFile length(int length) throws JfffException {
         if (lastColumn == null) {
             throw new JfffException("No column added jet");
         }
@@ -238,8 +251,15 @@ public class JfffFile<T> {
      * @param values The POJO containig all the values
      * @return The fornmatted String
      */
-    public String createString(T values) {
-        throw new UnsupportedOperationException();
+    public String createString(T values) throws IllegalAccessException, NoSuchMethodException, InvocationTargetException, JfffException {
+        StringBuilder sb = new StringBuilder();
+
+        for(JfffColumn c : columns) {
+            c.validate();
+            sb.append(c.toString(PropertyUtils.getSimpleProperty(values, c.getName())));
+        }
+
+        return sb.toString();
     }
 
     /**
